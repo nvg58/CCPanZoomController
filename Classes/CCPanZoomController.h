@@ -104,13 +104,26 @@ private:
 
   /*!< Duration of zoom after double-tap */
   CC_SYNTHESIZE(float, doubleTapZoomDuration, DoubleTapZoomDuration);
+  
+protected:
+  void updateTime(cocos2d::CCTime dt);
+  cocos2d::CCPoint boundPos(cocos2d::CCPoint pos);
+  void handleDoubleTapAt(cocos2d::CCPoint pt);
+  
+  void beginScroll(cocos2d::CCPoint pos);
+  void moveScroll(cocos2d::CCPoint pos);
+  void endScroll(cocos2d::CCPoint pos);
+  
+  void beginZoom(cocos2d::CCPoint pt, cocos2d::CCPoint otherPt);
+  void moveZoom(cocos2d::CCPoint pt, cocos2d::CCPoint otherPt);
+  void endZoom(cocos2d::CCPoint pt, cocos2d::CCPoint otherPt);
 
 public:
 /*! Create a new control with the node you want to scroll/zoom */
   static CCPanZoomController* controllerWithNode(cocos2d:: CCNode* node);
 
 /*! Initialize a new control with the node you want to scroll/zoom */
-  CCPanZoomController* initWithNode(cocos2d::CCNode* node);
+  virtual bool initWithNode(cocos2d::CCNode* node);
 
 /*! Scroll to position */
   void updatePosition(cocos2d::CCPoint pos);
