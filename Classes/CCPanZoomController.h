@@ -25,7 +25,7 @@
 
 #include "cocos2d.h"
 
-class CCPanZoomController
+class CCPanZoomController : public cocos2d::CCLayer
 {
 private:
   //properties
@@ -64,10 +64,11 @@ private:
   cocos2d::CCPoint _momentum;
 
   /*!< The max bounds you want to scroll */
-  CC_SYNTHESIZE(cocos2d::CCRect, boundingRect, BoundingRect);
+//  CC_SYNTHESIZE(cocos2d::CCRect, boundingRect, BoundingRect);
+  cocos2d::CCRect boundingRect;
   
   /*!< The boundary of your window, by default uses winSize of CCDirector */
-  CC_SYNTHESIZE(cocos2d::CCRect, windowRect, WindowRect);
+//  CC_SYNTHESIZE(cocos2d::CCRect, windowRect, WindowRect);
   
   /*!< Should zoom center on pinch pts, default is TRUE */
   CC_SYNTHESIZE(bool, centerOnPinch, CenterOnPinch)
@@ -100,13 +101,13 @@ private:
   CC_SYNTHESIZE(float, pinchDistanceThreshold, PinchDistanceThreshold);
 
   /*!< Get the optimal zoomOutLimit for the current state */
-  CC_SYNTHESIZE_READONLY(float, optimalZoomOutLimit, OptimalZoomOutLimit);
+//  CC_SYNTHESIZE_READONLY(float, optimalZoomOutLimit, OptimalZoomOutLimit);
 
   /*!< Duration of zoom after double-tap */
   CC_SYNTHESIZE(float, doubleTapZoomDuration, DoubleTapZoomDuration);
   
 protected:
-  void updateTime(cocos2d::CCTime dt);
+  void updateTime(float dt);
   cocos2d::CCPoint boundPos(cocos2d::CCPoint pos);
   void handleDoubleTapAt(cocos2d::CCPoint pt);
   
@@ -151,7 +152,19 @@ public:
 
 /*! Disable touches */
   void disable();
-
+  
+  void setBoundingRect(cocos2d::CCRect rect);
+  cocos2d::CCRect getBoundingRect();
+  
+  void setWindowRect(cocos2d::CCRect rect);
+  cocos2d::CCRect getWindowRect();
+  
+  float getOptimalZoomOutLimit();
+  
+  bool ccTouchBegan(cocos2d::CCTouch *touch, cocos2d::CCEvent *event);  
+  void ccTouchMoved(cocos2d::CCTouch *touch, cocos2d::CCEvent *event);
+  void ccTouchEnded(cocos2d::CCTouch *touch, cocos2d::CCEvent *event);
+  void ccTouchCancelled(cocos2d::CCTouch *touch, cocos2d::CCEvent *event);
 };
 
 #endif
