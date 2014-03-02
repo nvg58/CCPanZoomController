@@ -120,6 +120,8 @@ protected:
   void endZoom(cocos2d::CCPoint pt, cocos2d::CCPoint otherPt);
 
 public:
+  ~CCPanZoomController();
+  
 /*! Create a new control with the node you want to scroll/zoom */
   static CCPanZoomController* controllerWithNode(cocos2d:: CCNode* node);
 

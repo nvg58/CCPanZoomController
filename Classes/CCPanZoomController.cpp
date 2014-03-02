@@ -23,156 +23,6 @@
 #include "CCPanZoomController.h"
 #include "cocos2d.h"
 
-void handleDoubleTapAt(cocos2d::CCPoint pt)
-{
-	float mid = (_zoomInLimit + _zoomOutLimit) / 2;
-
-	//closer to being zoomed out? then zoom in, else zoom out
-	if (_node->scale < mid)
-		this->zoomInOnPoint(pt, _doubleTapZoomDuration);
-	else
-		this->zoomOutOnPoint(pt, _doubleTapZoomDuration);
-}
-
-void zoomInOnPoint(cocos2d::CCPoint pt, float duration)
-{
-	this->zoomOnPoint(pt, duration, _zoomInLimit);
-}
-
-void zoomOutOnPoint(cocos2d::CCPoint pt, float duration)
-{
-	this->zoomOnPoint(pt, duration, _zoomOutLimit);
-}
-
-void zoomOnPoint(cocos2d::CCPoint pt, float duration, float scale)
-{
-	_node->runAcion(CCPanZoomControllerScale::create(duration, scale, this, pt));
-}
-
-void beginScroll(cocos2d::CCPoint* pos)
-{
-	//reset
-	_momentum = cocos2d::CCPointZero;
-	_firstTouch = pos;
-}
-
-void moveScroll(cocos2d::CCPoint* pos)
-{
-	//diff
-	pos = cocos2d::ccpSub(pos, _firsTouch);
-
-	//apply momentum
-	_momentum->x += pos->x;
-	_momentum->y += pos->y;
-
-	//dampen value
-	pos = cocos2d::ccpMult(pos, _scrollDamping * _node->scale);
-
-	//debug
-	//NSLog(@"Moving to: (%.2f, %.2f)", pos.x, pos.y);
-
-	this->updatePosition::cocos2d::ccpAdd(_node->position, pos);
-}
-
-void endScroll(cocos2d::CCPoint* pos)
-{
-}
-
-void beginZoom(cocos2d::CCPoint* pt, cocos2d::CCPoint* pt2)
-{
-	//initialize our zoom vars
-	_firsLength = cocos2d::ccpDistance(pt, pt2);
-	_oldScale = _node->scale;
-
-	//get the mid point of pinch
-	_firstTouch = [_node->convertToNodeSpace(CCDirector::shareDirector->convertToGL(ccpMidPoint(pt, pt2));
-}
-
-void moveZoom(cocos2d::CCPoint* pt, cocos2d::CCPoint* pt2)
-{
-	//What's the difference in length since we began
-	float length = cocos2d::ccpDistance(pt, pt2);
-	float diff = (length - _firstLength);
-
-	//ignore small movements
-	if (fabs(diff) < _pinchDistanceThreshold)
-		return;
-
-	//calculate new scale
-	float factor = diff * _zoomRate;
-	float scaleTo = (_oldScale + factor);
-	float absScaleTO = fabs(scaleTo);
-	float mult = absScaleTo / scaleTo;
-
-	//paranoia
-	if (!_oldScale)
-		_oldScale = 0.001;
-
-	//dampen
-	float newScale = _oldScale*mult*pow(absScaleTo / _oldScale, _pinchDamping);
-
-	if (isnormal(newScale))
-	{
-		//bound scale
-		if (newScale > _zoomInLimit)
-			newScale = _zoomInLimit;
-		else if (newScale < _zoomOutLimit)
-			newScale = _zoomOutLimit;
-
-		//set the new scale
-		_node->scale = newScale;
-
-		//NSLog(@"Scale:%.2f", newScale);
-
-		//center on midpoint of pinch
-		if (_centerOnPinch)
-			this->setCenterPoint(_firstTouch, _zoomCenteringDamping);
-		else
-			this->updatePosition(_node->position);
-	}
-	else
-		cocos2d::CCLog("CCPanZoomController - Bad scale!");
-}
-
-void centerOnPoint(cocos2d::CCPoint pt)
-{
-	this->centerOnPoint(pt, 1.0f);
-}
-
-void centerOnPoint(cocos2d::CCPoint pt, float damping)
-{
-	//calc the difference between the window middle and the pt, apply the damping
-	CCPoint* mid = _node->convertToNodeSpace(ccpMidPoint(_winTr, _winBl));
-	CCPoint* diff = ccpMult(ccpSub(mid, pt), damping);
-	CCPoint* oldPos = _node->position;
-	CCPoint* newPos = ccpAdd(oldPos, diff);
-
-	//NSLog(@"Centering on: (%.2f, %.2f)", newPos.x, newPos.y);
-	this->updatePosition(newPos);
-}
-
-void centerOnPoint(cocos2d::CCPoint pt, float duration, float rate)
-{
-	//calc the difference between the window middle and the pt
-	CCPoint* mid = _node->convertToNodeSpace(ccpMidpoint(_winTr, _winBl));
-	CCPoint* diff = ccpSub(mid, pt);
-
-	//get the final destination
-	CCPoint* final = this->boundPos(ccpAdd(_node->position, diff));
-
-	//move to n*ew position, with an ease
-	cocos2d::CCMoveTo* moveTo = cocos2d::CCMoveTo::create(duration, final);
-	cocos2d::CCEaseOut* ease = cocos2d::CCEaseOut::create(moveTo, rate);
-
-	_node->runaction(ease);
-}
-
-void endZoom(cocos2d::CCPoint pt, cocos2d::CCPoint pt2)
-{
-	//[self moveZoom:pt otherPt:pt2];
-}
-}
-=======
 USING_NS_CC;
 
 //Special scale action so view stays centered on a given point
@@ -180,8 +30,8 @@ class CCPanZoomControllerScale : public CCScaleTo
 {
   CCPanZoomController *_controller;
   CCPoint _point;
-
-  static CCPanZoomControllerScale* actionWithDuration(CCTime duration,
+public:
+  static CCPanZoomControllerScale* actionWithDuration(float duration,
                                                       float scale,
                                                       CCPanZoomController* controller,
                                                       CCPoint pt)
@@ -192,19 +42,19 @@ class CCPanZoomControllerScale : public CCScaleTo
       pRet->autorelease();
       return pRet;
     }
-      CC_SAFE_DELETE(pRet);
+    CC_SAFE_DELETE(pRet);
     
     return NULL;
   }
   
-  virtual bool initWithDuration(CCTime duration,
+  virtual bool initWithDuration(float duration,
                                 float scale,
                                 CCPanZoomController* controller,
                                 CCPoint pt)
   {
     if (CCScaleTo::initWithDuration(duration, scale))
     {
-      controller->retain();
+//      controller->retain();
       _point = pt;
       return true;
     }
@@ -213,7 +63,7 @@ class CCPanZoomControllerScale : public CCScaleTo
   
   void update(float t)
   {
-//    [super update:t];
+    //    [super update:t];
     
     //use damping, but make sure we get there
     if (t < 1.0f)
@@ -225,7 +75,7 @@ class CCPanZoomControllerScale : public CCScaleTo
   void dealloc()
   {
     _controller->release();
-//    [super dealloc];
+    //    [super dealloc];
   }
 };
 
@@ -256,9 +106,10 @@ CCPanZoomController* CCPanZoomController::controllerWithNode(CCNode* node)
 
 bool CCPanZoomController::initWithNode(cocos2d::CCNode *node)
 {
-//	[super init];
+  //	[super init];
 	
 	_touches = CCArray::create();
+  _touches->retain();
 	
   //use the content size to determine the default scrollable area
 	_node = node;
@@ -292,6 +143,11 @@ bool CCPanZoomController::initWithNode(cocos2d::CCNode *node)
 //	[super dealloc];
 //}
 
+CCPanZoomController::~CCPanZoomController()
+{
+  _touches->release();
+}
+
 void CCPanZoomController::setBoundingRect(CCRect rect)
 {
   _bl = rect.origin;
@@ -304,7 +160,7 @@ CCRect CCPanZoomController::getBoundingRect()
   return CCRectMake(_bl.x, _bl.y, size.x, size.y);
 }
 
-  void CCPanZoomController::setWindowRect(CCRect rect)
+void CCPanZoomController::setWindowRect(CCRect rect)
 {
   _winBl = rect.origin;
 	_winTr = ccpAdd(_winBl, ccp(rect.size.width, rect.size.height));
@@ -328,11 +184,11 @@ float CCPanZoomController::getOptimalZoomOutLimit()
   //don't divide by zero
   if (width)
     xMaxZoom = (_winTr.x - _winBl.x) / width;
-    if (height)
-      yMaxZoom = (_winTr.y - _winBl.y) / height;
-      
-      //give the best out of the 2 zooms
-      return (xMaxZoom > yMaxZoom) ? xMaxZoom : yMaxZoom;
+  if (height)
+    yMaxZoom = (_winTr.y - _winBl.y) / height;
+  
+  //give the best out of the 2 zooms
+  return (xMaxZoom > yMaxZoom) ? xMaxZoom : yMaxZoom;
 }
 
 CCPoint CCPanZoomController::boundPos(cocos2d::CCPoint pos)
@@ -351,16 +207,16 @@ CCPoint CCPanZoomController::boundPos(cocos2d::CCPoint pos)
   //bound x
 	if (pos.x > bottomLeft.x)
 		pos.x = bottomLeft.x;
-    else if (pos.x < -topRight.x)
-      pos.x = -topRight.x;
-      
-      //bound y
-      if (pos.y > bottomLeft.y)
-        pos.y = bottomLeft.y;
-        else if (pos.y < -topRight.y)
-          pos.y = -topRight.y;
-          
-          return pos;
+  else if (pos.x < -topRight.x)
+    pos.x = -topRight.x;
+  
+  //bound y
+  if (pos.y > bottomLeft.y)
+    pos.y = bottomLeft.y;
+  else if (pos.y < -topRight.y)
+    pos.y = -topRight.y;
+  
+  return pos;
 }
 
 void CCPanZoomController::updatePosition(CCPoint pos)
@@ -377,7 +233,7 @@ void CCPanZoomController::updatePosition(CCPoint pos)
 void CCPanZoomController::enableWithTouchPriority(int priority, bool swallowsTouches)
 {
   CCDirector::sharedDirector()->getTouchDispatcher()->addTargetedDelegate(this, priority, swallowsTouches);
-
+  
   CCDirector::sharedDirector()->getScheduler()->scheduleSelector(schedule_selector(CCPanZoomController::updateTime), this, 0, false);
 }
 
@@ -484,8 +340,8 @@ void CCPanZoomController::ccTouchEnded(cocos2d::CCTouch *touch, cocos2d::CCEvent
     this->endScroll(pt);
     
     //handle double-tap zooming
-//    if (_zoomOnDoubleTap && [touch tapCount] == 2)
-//      [self handleDoubleTapAt:pt];
+    //    if (_zoomOnDoubleTap && [touch tapCount] == 2)
+    //      [self handleDoubleTapAt:pt];
 	}
 	
   _touches->removeObject(touch);
@@ -496,29 +352,152 @@ void CCPanZoomController::ccTouchCancelled(cocos2d::CCTouch *pTouch, cocos2d::CC
   this->ccTouchCancelled(pTouch, pEvent);
 }
 
-- (void) handleDoubleTapAt:(CGPoint)pt
+
+void CCPanZoomController::handleDoubleTapAt(cocos2d::CCPoint pt)
 {
-  float mid = (_zoomInLimit + _zoomOutLimit)/2;
+	float mid = (_zoomInLimit + _zoomOutLimit) / 2;
   
-  //closer to being zoomed out? then zoom in, else zoom out
-  if (_node.scale < mid)
-    [self zoomInOnPoint:pt duration:_doubleTapZoomDuration];
+	//closer to being zoomed out? then zoom in, else zoom out
+	if (_node->getScale() < mid)
+		this->zoomInOnPoint(pt, _doubleTapZoomDuration);
+	else
+		this->zoomOutOnPoint(pt, _doubleTapZoomDuration);
+}
+
+void CCPanZoomController::zoomInOnPoint(cocos2d::CCPoint pt, float duration)
+{
+	this->zoomOnPoint(pt, duration, _zoomInLimit);
+}
+
+void CCPanZoomController::zoomOutOnPoint(cocos2d::CCPoint pt, float duration)
+{
+	this->zoomOnPoint(pt, duration, _zoomOutLimit);
+}
+
+void CCPanZoomController::zoomOnPoint(cocos2d::CCPoint pt, float duration, float scale)
+{
+	_node->runAction(CCPanZoomControllerScale::actionWithDuration(duration, scale, this, pt));
+}
+
+void CCPanZoomController::beginScroll(cocos2d::CCPoint pos)
+{
+	//reset
+	_momentum = cocos2d::CCPointZero;
+	_firstTouch = pos;
+}
+
+void CCPanZoomController::moveScroll(cocos2d::CCPoint pos)
+{
+	//diff
+	pos = cocos2d::ccpSub(pos, _firstTouch);
+  
+	//apply momentum
+	_momentum.x += pos.x;
+	_momentum.y += pos.y;
+  
+	//dampen value
+	pos = cocos2d::ccpMult(pos, _scrollDamping * _node->getScale());
+  
+	//debug
+	//NSLog(@"Moving to: (%.2f, %.2f)", pos.x, pos.y);
+  
+	this->updatePosition(ccpAdd(_node->getPosition(), pos));
+}
+
+void CCPanZoomController::endScroll(cocos2d::CCPoint pos)
+{
+}
+
+void CCPanZoomController::beginZoom(cocos2d::CCPoint pt, cocos2d::CCPoint pt2)
+{
+	//initialize our zoom vars
+	_firstLength = cocos2d::ccpDistance(pt, pt2);
+	_oldScale = _node->getScale();
+  
+	//get the mid point of pinch
+  _firstTouch = _node->convertToNodeSpace(CCDirector::sharedDirector()->convertToGL(ccpMidpoint(pt, pt2)));
+}
+
+void CCPanZoomController::moveZoom(cocos2d::CCPoint pt, cocos2d::CCPoint pt2)
+{
+  //What's the difference in length since we began
+  float length = cocos2d::ccpDistance(pt, pt2);
+  float diff = (length - _firstLength);
+  
+  //ignore small movements
+  if (fabs(diff) < _pinchDistanceThreshold)
+    return;
+  
+  //calculate new scale
+  float factor = diff * _zoomRate;
+  float scaleTo = (_oldScale + factor);
+  float absScaleTo = fabs(scaleTo);
+  float mult = absScaleTo / scaleTo;
+  
+  //paranoia
+  if (!_oldScale)
+    _oldScale = 0.001;
+  
+  //dampen
+  float newScale = _oldScale*mult*pow(absScaleTo / _oldScale, _pinchDamping);
+  
+  if (isnormal(newScale))
+  {
+    //bound scale
+    if (newScale > _zoomInLimit)
+      newScale = _zoomInLimit;
+    else if (newScale < _zoomOutLimit)
+      newScale = _zoomOutLimit;
+    
+    //set the new scale
+    _node->setScale(newScale);
+    
+    //NSLog(@"Scale:%.2f", newScale);
+    
+    //center on midpoint of pinch
+    if (_centerOnPinch)
+      this->centerOnPoint(_firstTouch, zoomCenteringDamping);
+    else
+      this->updatePosition(_node->getPosition());
+  }
   else
-    [self zoomOutOnPoint:pt duration:_doubleTapZoomDuration];
+    cocos2d::CCLog("CCPanZoomController - Bad scale!");
 }
 
-- (void) zoomInOnPoint:(CGPoint)pt duration:(float)duration
+void CCPanZoomController::centerOnPoint(cocos2d::CCPoint pt)
 {
-  [self zoomOnPoint:pt duration:duration scale:_zoomInLimit];
+  this->centerOnPoint(pt, 1.0f);
 }
 
-- (void) zoomOutOnPoint:(CGPoint)pt duration:(float)duration
+void CCPanZoomController::centerOnPoint(cocos2d::CCPoint pt, float damping)
 {
-  [self zoomOnPoint:pt duration:duration scale:_zoomOutLimit];
+  //calc the difference between the window middle and the pt, apply the damping
+  CCPoint mid = _node->convertToNodeSpace(ccpMidpoint(_winTr, _winBl));
+  CCPoint diff = ccpMult(ccpSub(mid, pt), damping);
+  CCPoint oldPos = _node->getPosition();
+  CCPoint newPos = ccpAdd(oldPos, diff);
+  
+  //NSLog(@"Centering on: (%.2f, %.2f)", newPos.x, newPos.y);
+  this->updatePosition(newPos);
 }
 
-- (void) zoomOnPoint:(CGPoint)pt duration:(float)duration scale:(float)scale
+void CCPanZoomController::centerOnPoint(cocos2d::CCPoint pt, float duration, float rate)
 {
-  [_node runAction:[CCPanZoomControllerScale actionWithDuration:duration scale:scale controller:self point:pt]];
+  //calc the difference between the window middle and the pt
+  CCPoint mid = _node->convertToNodeSpace(ccpMidpoint(_winTr, _winBl));
+  CCPoint diff = ccpSub(mid, pt);
+  
+  //get the final destination
+  CCPoint final = this->boundPos(ccpAdd(_node->getPosition(), diff));
+  
+  //move to n*ew position, with an ease
+  CCMoveTo* moveTo = CCMoveTo::create(duration, final);
+  CCEaseOut* ease = CCEaseOut::create(moveTo, rate);
+  
+  _node->runAction(ease);
 }
 
+void CCPanZoomController::endZoom(cocos2d::CCPoint pt, cocos2d::CCPoint pt2)
+{
+  //[self moveZoom:pt otherPt:pt2];
+}
