@@ -1,5 +1,5 @@
 /* Copyright (c) 2011 Robert Blackwood
- * Ported to CPP by Giap Nguyen on 28 Feb 2014
+ * Ported to CPP by Giap Nguyen and Ha Hoang on 28 Feb 2014
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
